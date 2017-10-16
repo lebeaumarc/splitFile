@@ -2,12 +2,13 @@ package main
 
 import (
 	"bufio"
+	"flag"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"fmt"
-	"strings"
 	"path/filepath"
-	"io/ioutil"
+	"strings"
 )
 
 func main() {
@@ -15,30 +16,32 @@ func main() {
 	fileNum := uint64(0)
 	line := ""
 	lineNum = 0
-	maxLines := uint64(49000) // How many lines before we split the file
+	var maxLines uint64
 	var outFile *os.File
 	var headerLine string
 	var lineSeparator = "\n" // we assume this is running under Windows OS
+	flag.Uint64Var(&maxLines, "maxLines", uint64(49000), "How many lines before we split the file")
+	flag.Parse()
 
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(dir)
-
-	f, err := os.OpenFile("splitFile.log", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	log.Println("current dir = " + dir)
+	log.Println(fmt.Sprintf("maxLines=%d", maxLines))
+	f, err := os.OpenFile("splitFile.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalf("error opening file: %v", err)
 	}
 	defer f.Close()
 
-	log.Println("Logfile="+f.Name())
+	log.Println("Logfile=" + f.Name())
 
 	log.SetOutput(f)
 
-	var inputDir = filepath.Join(dir,"input")
-	var outputDir = filepath.Join(dir,"output")
-	var archiveDir = filepath.Join(dir,"archive")
+	var inputDir = filepath.Join(dir, "input")
+	var outputDir = filepath.Join(dir, "output")
+	var archiveDir = filepath.Join(dir, "archive")
 
 	if _, err := os.Stat(inputDir); os.IsNotExist(err) {
 		os.Mkdir(inputDir, os.ModePerm)
@@ -59,11 +62,11 @@ func main() {
 			continue
 		}
 		s := singleFileInfo.Name()
-		lineNum=0
-		fileNum=0
+		lineNum = 0
+		fileNum = 0
 		// open a file
-		notice("Processing file "+s)
-		if file, err := os.Open(filepath.Join(inputDir,s)); err == nil {
+		notice("Processing file " + s)
+		if file, err := os.Open(filepath.Join(inputDir, s)); err == nil {
 
 			// make sure it gets closed
 			defer file.Close()
@@ -71,11 +74,11 @@ func main() {
 			// create a new scanner and read the file line by line
 			scanner := bufio.NewScanner(file)
 			for scanner.Scan() {
-				if lineNum % maxLines == 0 {
+				if lineNum%maxLines == 0 {
 					name := strings.TrimSuffix(s, filepath.Ext(s))
 					suffix := filepath.Ext(s)
-					fileName := filepath.Join(outputDir,fmt.Sprintf("%s_%02d%s",name,fileNum,suffix))
-					if (outFile != nil) {
+					fileName := filepath.Join(outputDir, fmt.Sprintf("%s_%02d%s", name, fileNum, suffix))
+					if outFile != nil {
 						outFile.Sync()
 						outFile.Close()
 					}
@@ -86,17 +89,17 @@ func main() {
 						os.Exit(1)
 					}
 					outFile = f
-					notice("Split to : "+ fileName)
-					if fileNum>0 {
-                        outFile.WriteString(headerLine + lineSeparator)
+					notice("Split to : " + fileName)
+					if fileNum > 0 {
+						outFile.WriteString(headerLine + lineSeparator)
 					}
 					fileNum++
 				}
 				line = scanner.Text()
-				if lineNum==0 && fileNum==0 {
+				if lineNum == 0 && fileNum == 0 {
 					headerLine = line
-				} 
-					
+				}
+
 				// log.Println(line)
 				outFile.WriteString(line + lineSeparator)
 				lineNum++
@@ -107,13 +110,13 @@ func main() {
 				log.Fatal(err)
 			}
 
-			if (outFile != nil) {
+			if outFile != nil {
 				outFile.Sync()
 				outFile.Close()
 			}
 
 			file.Close()
-			os.Rename(filepath.Join(inputDir,s),filepath.Join(archiveDir,s))
+			os.Rename(filepath.Join(inputDir, s), filepath.Join(archiveDir, s))
 
 		} else {
 			log.Fatal(err)
@@ -121,7 +124,7 @@ func main() {
 	}
 }
 
-func notice(message string){
+func notice(message string) {
 	log.Println(message)
 	fmt.Println(message)
 }
