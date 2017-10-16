@@ -1,0 +1,37 @@
+= SplitFile utility
+
+== Description
+
+The goal of this utility is to split large comma separated value files in chunks of less than 50000 lines, so they can be loaded by the Salesforce loader.
+
+== How to compile
+
+* For your platform:
+ `go build splitFile.go`
+
+* For Windows:
+ `GOOS=windows GOARCH=amd64 go build splitFile.go`
+
+* For OSX :
+ `GOOS=darwin GOARCH=amd64 go build splitFile.go`
+
+== How does it work ?
+The first time the application is executed, it will create the following subfolders if they don's already exist:
+
+* input
+* output
+* archive
+
+In order to use the application, you should 
+
+. drop the `csv` file(s) you wish to split in the `input` subfolder.
+. start the application `./splitFile` or `.\splitfile.exe` depending on your platform.
+
+The application will split the file, creating smaller files in the `output` folder with a maximum of 49000 lines per file.
+Each produced file will have the same name as the original file, with an additionnal 2 digits counter just before the extension.
+
+e.g: myfile.csv => myfile_00.csv myfile_01.csv ...
+
+The original file is then moved from the `input` subfolder to the `archive` subfolder.
+
+You can find a full log of the former runs in the `splifFile.log` logfile.
