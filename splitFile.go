@@ -1,3 +1,6 @@
+// +build darwin windows
+// +build amd64
+
 package main
 
 import (
@@ -12,13 +15,13 @@ import (
 )
 
 func main() {
-	lineNum := uint64(0)
-	fileNum := uint64(0)
-	line := ""
-	lineNum = 0
+	var lineNum = uint64(0)
+	var fileNum = uint64(0)
+	var line string
 	var maxLines uint64
 	var outFile *os.File
 	var headerLine string
+	var firstLine = bool(true)
 	var lineSeparator = "\n" // we assume this is running under Windows OS
 	flag.Uint64Var(&maxLines, "maxLines", uint64(49000), "How many lines before we split the file")
 	flag.Parse()
@@ -95,9 +98,11 @@ func main() {
 					}
 					fileNum++
 				}
+
 				line = scanner.Text()
-				if lineNum == 0 && fileNum == 0 {
+				if firstLine {
 					headerLine = line
+					firstLine = false
 				}
 
 				// log.Println(line)
